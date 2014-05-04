@@ -34,14 +34,14 @@ INSERT INTO nodes (`uuid`, `parentId`, `name`, `displayName`, `fragment`, `fragm
                 'root',
                 'Home',
                 'markdown',
-                'fragment_markdown|uuid|content'
+                'fragment_markdown,uuid,content'
         ), (
                 '002ac299-3d5d-4460-99d4-58db6c3179e1',
                 'e2c9ee58-b3e9-4762-a46f-3dc69905bc5f',
                 'secondary',
                 'Secondary',
                 'markdown',
-                'fragment_markdown|uuid|content'
+                'fragment_markdown,uuid,content'
         );
 
 INSERT INTO `fragment_markdown` (`uuid`, `content`) VALUES
