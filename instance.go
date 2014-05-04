@@ -6,6 +6,7 @@ import (
 	sql		"database/sql"
 	template	"text/template"
 	regexp		"regexp"
+	strings		"strings"
 )
 
 // The default instance
@@ -109,14 +110,25 @@ func (in *Instance) dynamicHandler (w http.ResponseWriter, r *http.Request) {
 		http.NotFound (w, r)
 		return
 	}
-	iface := Interface {
+	fragmentOptions := strings.FieldsFunc (node.fragmentOptions, func (r rune) bool {
+		if r == ',' {
+			return true
+		}
+		return false
+	})
+	fIface := FragmentInterface {
+		UUID:		node.uuid,
 		Request:	r,
-		MainMenu:	in.getMainMenu (),
 		Instance:	in,
 		Session:	getSession (w, r),
-		node:		node,
+		Options:	fragmentOptions,
 	}
-	in.baseTemplate.Execute (w, iface)
+	fragment := getFragment (node.fragment)
+	tIface := TemplateInterface {
+		MainMenu:	in.getMainMenu (),
+		Body:		fragment.GetHtml (fIface),
+	}
+	in.baseTemplate.Execute (w, tIface)
 }
 
 // Serves static files

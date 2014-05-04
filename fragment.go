@@ -9,7 +9,7 @@ var registeredFragments = map[string]Fragment {}
 // Defines a fragment that is typically displayed as the body of a page
 type Fragment struct {
 	Name	string			// Name of the fragment
-	GetHtml	func (Interface) string	// Should return the html-code of the fragment
+	GetHtml	func (FragmentInterface) string	// Should return the html-code of the fragment
 }
 
 func RegisterFragment (fragment Fragment) {
