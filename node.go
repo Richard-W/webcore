@@ -38,10 +38,10 @@ func (n *node) getNodeForPathFields (pathFields []string) *node {
 		return n
 	}
 	for _, child := range n.children {
-		if child.deep {
-			return child
-		}
 		if child.name == pathFields[0] {
+			if child.deep {
+				return child
+			}
 			return child.getNodeForPathFields (pathFields[1:])
 		}
 	}
