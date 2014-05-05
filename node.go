@@ -17,6 +17,7 @@ type node struct {
 	displayName	string	// Used in menus
 	fragment	string	// Name of the body-fragment
 	fragmentOptions	string	// An arbitrary string the fragment can use
+	deep		bool	// True when this node should handle all subpaths
 }
 
 // Get a node for a specific path
@@ -37,6 +38,9 @@ func (n *node) getNodeForPathFields (pathFields []string) *node {
 		return n
 	}
 	for _, child := range n.children {
+		if child.deep {
+			return child
+		}
 		if child.name == pathFields[0] {
 			return child.getNodeForPathFields (pathFields[1:])
 		}
@@ -65,13 +69,19 @@ func getNodesByParent (parent *node, db *sql.DB) ([]*node, error) {
 		uuid = parent.uuid
 	}
 	result := []*node {}
-	res, err := db.Query ("SELECT `uuid`, `name`, `displayName`, `fragment`, `fragmentOptions` FROM `nodes` WHERE `parentId` = ?", uuid)
+	res, err := db.Query ("SELECT `uuid`, `name`, `displayName`, `fragment`, `fragmentOptions`, `deep` FROM `nodes` WHERE `parentId` = ?", uuid)
 	if err != nil {
 		return nil, err
 	}
 	for res.Next () {
 		newNode := new (node)
-		res.Scan (&newNode.uuid, &newNode.name, &newNode.displayName, &newNode.fragment, &newNode.fragmentOptions)
+		var deep int
+		res.Scan (&newNode.uuid, &newNode.name, &newNode.displayName, &newNode.fragment, &newNode.fragmentOptions, &deep)
+		if deep == 0 {
+			newNode.deep = false
+		} else {
+			newNode.deep = true
+		}
 		newNode.parent = parent
 		newNode.children, err = getNodesByParent (newNode, db)
 		if err != nil {

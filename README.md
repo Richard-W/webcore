@@ -19,7 +19,8 @@ CREATE TABLE `nodes` (
         `name` TEXT,
         `displayName` TEXT,
         `fragment` TEXT,
-        `fragmentOptions` TEXT
+        `fragmentOptions` TEXT,
+	`deep` INTEGER
 );
 
 CREATE TABLE `fragment_markdown` (
@@ -27,21 +28,23 @@ CREATE TABLE `fragment_markdown` (
         `content` TEXT
 );
 
-INSERT INTO nodes (`uuid`, `parentId`, `name`, `displayName`, `fragment`, `fragmentOptions`) VALUES
+INSERT INTO nodes (`uuid`, `parentId`, `name`, `displayName`, `fragment`, `fragmentOptions`, `deep`) VALUES
         (
                 'e2c9ee58-b3e9-4762-a46f-3dc69905bc5f',
                 '',
                 'root',
                 'Home',
                 'markdown',
-                'fragment_markdown,uuid,content'
+                'fragment_markdown,uuid,content',
+		'0'
         ), (
                 '002ac299-3d5d-4460-99d4-58db6c3179e1',
                 'e2c9ee58-b3e9-4762-a46f-3dc69905bc5f',
                 'secondary',
                 'Secondary',
                 'markdown',
-                'fragment_markdown,uuid,content'
+                'fragment_markdown,uuid,content',
+		'0'
         );
 
 INSERT INTO `fragment_markdown` (`uuid`, `content`) VALUES
