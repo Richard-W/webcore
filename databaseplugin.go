@@ -11,7 +11,7 @@ type DatabasePlugin struct {
 }
 
 var coreDatabasePlugin = DatabasePlugin {
-	Name:		"core",
+	Name:		"webcore_core",
 	Version:	1,
 	Upgrade:	upgradeCoreDatabase,
 }
