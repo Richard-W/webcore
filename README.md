@@ -1,72 +1,16 @@
 Webcore
 =======
 
-A lightweigt and extensible CMS-Framework written in Go. The codebase is still under heavy development
+A lightweight and extensible CMS-Framework written in Go. The codebase is still under heavy development
 and the API ist likely to change in the future (i am definitely going to change the RegisterFragment-API)
 
 Installation
 ------------
 
-At this time installation of this is king of tough, because you have to set up
-the SQL tables manually. At some point i will add a tool to simplify the task.
-
-For a simple setup execute the following SQL in your database:
-
-```
-CREATE TABLE `nodes` (
-        `uuid` TEXT NOT NULL PRIMARY KEY,
-        `parentId` TEXT,
-        `name` TEXT,
-        `displayName` TEXT,
-        `fragment` TEXT,
-        `fragmentOptions` TEXT,
-	`deep` INTEGER
-);
-
-CREATE TABLE `fragment_markdown` (
-        `uuid` TEXT NOT NULL PRIMARY KEY,
-        `content` TEXT
-);
-
-INSERT INTO nodes (`uuid`, `parentId`, `name`, `displayName`, `fragment`, `fragmentOptions`, `deep`) VALUES
-        (
-                'e2c9ee58-b3e9-4762-a46f-3dc69905bc5f',
-                '',
-                'root',
-                'Home',
-                'markdown',
-                'fragment_markdown,uuid,content',
-		'0'
-        ), (
-                '002ac299-3d5d-4460-99d4-58db6c3179e1',
-                'e2c9ee58-b3e9-4762-a46f-3dc69905bc5f',
-                'secondary',
-                'Secondary',
-                'markdown',
-                'fragment_markdown,uuid,content',
-		'0'
-        );
-
-INSERT INTO `fragment_markdown` (`uuid`, `content`) VALUES
-('e2c9ee58-b3e9-4762-a46f-3dc69905bc5f', '
-Home
-====
-
-This is some sample site written in markdown
-'),
-
-('002ac299-3d5d-4460-99d4-58db6c3179e1', '
-Secondary
-=========
-
-Some secondary page
-');
-```
-
-This is a simple database setup with a top page (Home) and a second level page. Now you need a template to actually display something:
+You need some kind of template to display your contents:
 
 template.html:
-```
+```html
 <!DOCTYPE html>
 <html>
 <head>
@@ -104,9 +48,12 @@ template.html:
 The MainMenu contains the pages up to the third node level. You may choose to not display the third level. The top page and the secondary pages
 are treated equally.
 
+webcore uses the [text/template](http://golang.org/pkg/text/template/) package from the go standard library. It is passed a TemplateInterface-struct.
+The definition of the structs used can be obtained using `godoc github.com/richard-w/webcore`
+
 Now you can use the following code to display the site:
 
-```
+```go
 package main
 
 import (
@@ -130,4 +77,4 @@ func main () {
 }
 ```
 
-In the example i used sqlite3 but you can use every other working sql-driver. See the documentation for the package [database/sql](http://golang.org/pkg/database/sql/)
+In the example i used sqlite3 but you can use every other working sql-driver. See the documentation for the package [database/sql](http://golang.org/pkg/database/sql/). Webcore automatically installs a core database and maintains it.

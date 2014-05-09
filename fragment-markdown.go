@@ -10,11 +10,8 @@ func init () {
 }
 
 func fragmentMarkdownGetHtml (iface FragmentInterface) string {
-	if len (iface.Options) != 3 {
-		panic ("Invalid fragment options")
-	}
 	db := iface.Instance.GetDatabase ()
-	res, err := db.Query ("SELECT `"+iface.Options[2]+"` FROM `"+iface.Options[0]+"` WHERE `"+iface.Options[1]+"` = ?", iface.UUID)
+	res, err := db.Query ("SELECT `content` FROM `fragment_markdown` WHERE `uuid` = ?", iface.UUID)
 	if err != nil {
 		panic (err.Error ())
 	}

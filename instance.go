@@ -17,7 +17,7 @@ var staticRegexp = regexp.MustCompile ("^/static/([a-zA-Z0-9\\-_/]+(\\.[a-zA-Z0-
 
 // An Instance is the representation of an entire webservice.
 type Instance struct {
-	database	*sql.DB			// SQL database used by this instance
+	database	*Database		// SQL database used by this instance
 	httpServer	http.Server		// http server serving requests
 	httpHandler	*http.ServeMux		// associated http handler
 	topNode		*node			// the root of the node tree
@@ -37,7 +37,11 @@ func NewInstance () *Instance {
 
 // Set the database of the instance
 func (in *Instance) SetDatabase (database *sql.DB) {
-	in.database = database
+	db, err := newDatabase (database)
+	if err != nil {
+		panic (err.Error ())
+	}
+	in.database = db
 }
 
 // Set the database of the default instance
@@ -46,12 +50,12 @@ func SetDatabase (database *sql.DB) {
 }
 
 // Get the database of the instance
-func (in *Instance) GetDatabase () *sql.DB {
+func (in *Instance) GetDatabase () *Database {
 	return in.database
 }
 
 // Get the database of the instance
-func GetDatabase () *sql.DB {
+func GetDatabase () *Database {
 	return DefaultInstance.GetDatabase ()
 }
 

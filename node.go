@@ -2,7 +2,6 @@ package webcore
 
 import (
 	strings	"strings"
-	sql	"database/sql"
 	errors	"errors"
 )
 
@@ -49,7 +48,7 @@ func (n *node) getNodeForPathFields (pathFields []string) *node {
 }
 
 // Get the top node of the node tree
-func getTopNode (db *sql.DB) (*node, error) {
+func getTopNode (db *Database) (*node, error) {
 	topNodes, err := getNodesByParent (nil, db)
 	if err != nil {
 		return nil, err
@@ -61,7 +60,7 @@ func getTopNode (db *sql.DB) (*node, error) {
 }
 
 // Recursively get children of nodes
-func getNodesByParent (parent *node, db *sql.DB) ([]*node, error) {
+func getNodesByParent (parent *node, db *Database) ([]*node, error) {
 	var uuid string
 	if parent == nil {
 		uuid = ""
@@ -69,7 +68,7 @@ func getNodesByParent (parent *node, db *sql.DB) ([]*node, error) {
 		uuid = parent.uuid
 	}
 	result := []*node {}
-	res, err := db.Query ("SELECT `uuid`, `name`, `displayName`, `fragment`, `fragmentOptions`, `deep` FROM `nodes` WHERE `parentId` = ?", uuid)
+	res, err := db.Query ("SELECT `uuid`, `name`, `display_name`, `fragment`, `fragment_options`, `deep` FROM `nodes` WHERE `parent_id` = ?", uuid)
 	if err != nil {
 		return nil, err
 	}
