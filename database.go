@@ -2,43 +2,63 @@ package webcore
 
 import (
 	sql	"database/sql"
-	uuid	"code.google.com/p/go-uuid/uuid"
-	strconv	"strconv"
+	errors	"errors"
 )
-
-const DATABASE_VERSION = 1
 
 // Maintains the database and upgrades it if neccessary
 type Database struct {
-	realDatabase	*sql.DB	// Wrapped SQL connection
+	realDatabase	*sql.DB			// Wrapped SQL connection
+	plugins		[]DatabasePlugin	// Slice of plugins registered with this database
 }
 
+var ErrDBPluginNameTaken = errors.New ("Plugin name is already registered.")
+
 // Wraps a sql.DB pointer in a database struct
-func newDatabase (db *sql.DB) (*Database, error) {
+func NewDatabase (db *sql.DB) (*Database, error) {
 	database := new (Database)
 	database.realDatabase = db
-	err := database.checkVersion ()
+	err := database.RegisterPlugin (coreDatabasePlugin)
 	if err != nil {
 		return nil, err
 	}
 	return database, nil
 }
 
-// Checks if the database is up-to-date and upgrades it if it is not.
-func (db Database) checkVersion () error {
-	res, err := db.Query ("SELECT `version` FROM `versions` WHERE `name` = 'webcore'")
+// Registers a database plugin with this database and upgrades the tables if neccessary
+func (db *Database) RegisterPlugin (plugin DatabasePlugin) error {
+	for _, rplugin := range db.plugins {
+		if plugin.Name == rplugin.Name {
+			return ErrDBPluginNameTaken
+		}
+	}
+	db.plugins = append (db.plugins, plugin)
+	res, err := db.Query ("SELECT `version` FROM `plugin_versions` WHERE `name` = ?", plugin.Name)
 	if err != nil {
-		return db.upgradeDatabase (0)
+		return db.upgradePlugin (plugin, 0)
 	}
-	if !res.Next () {
-		panic ("Unexpected behaviour of sql-module: ErrNoRows not thrown but res.Next returns false")
+	res.Next ()
+	var plugin_version int
+	res.Scan (&plugin_version)
+	if plugin_version < plugin.Version {
+		return db.upgradePlugin (plugin, plugin_version)
 	}
-	var database_version int
-	res.Scan (&database_version)
-	if database_version < DATABASE_VERSION {
-		return db.upgradeDatabase (database_version)
+	return nil;
+}
+
+// Upgrades a plugin and sets the version in the version-table
+func (db *Database) upgradePlugin (plugin DatabasePlugin, oldVersion int) error {
+	err := plugin.Upgrade (db, oldVersion)
+	if err != nil {
+		return err
 	}
-	return nil
+	var query string
+	if oldVersion == 0 {
+		query = "INSERT INTO `plugin_versions` (`version`, `name`) VALUES (?, ?)"
+	} else {
+		query = "UPDATE `plugin_versions` SET `version` = ? WHERE `name` = ?"
+	}
+	_, err = db.Exec (query, plugin.Version, plugin.Name)
+	return err
 }
 
 // See sql.DB.Query
@@ -49,56 +69,4 @@ func (db Database) Query (query string, v ...interface{}) (*sql.Rows, error) {
 // See sql.DB.Exec
 func (db Database) Exec (query string, v ...interface{}) (sql.Result, error) {
 	return db.realDatabase.Exec (query, v...)
-}
-
-// Upgrades the database to the current version
-func (db Database) upgradeDatabase (oldVersion int) error {
-	switch oldVersion {
-	case 0:
-		rootUUID := uuid.New ()
-		queries := []string {
-			"CREATE TABLE `versions` ("+
-			"	`name` TEXT NOT NULL PRIMARY KEY,"+
-			"	`version` INTEGER"+
-			")",
-
-			"INSERT INTO `versions` (`name`, `version`) VALUES "+
-			"	('webcore', '"+strconv.Itoa (DATABASE_VERSION)+"')",
-
-			"CREATE TABLE `nodes` ("+
-			"	`uuid` TEXT NOT NULL PRIMARY KEY,"+
-			"	`parent_id` TEXT,"+
-			"	`name` TEXT,"+
-			"	`display_name` TEXT,"+
-			"	`fragment` TEXT,"+
-			"	`fragment_options` TEXT,"+
-			"	`deep` INTEGER"+
-			")",
-
-			"INSERT INTO `nodes` "+
-			"	(`uuid`, `parent_id`, `name`, `display_name`, `fragment`, `fragment_options`) VALUES "+
-			"	('"+rootUUID+"', '', 'root', 'Home', 'markdown', '')",
-
-			"CREATE TABLE `fragment_markdown` ("+
-			"	`uuid` TEXT NOT NULL PRIMARY KEY, "+
-			"	`content` TEXT "+
-			")",
-
-			"INSERT INTO `fragment_markdown` "+
-			"	(`uuid`, `content`) VALUES "+
-			"	('"+rootUUID+"', '"+
-					"Home\n"+
-					"====\n\n"+
-					"This is a sample page"+
-			"	')",
-		}
-		for _, query := range queries {
-			_, err := db.Exec (query)
-			if err != nil {
-				return err
-			}
-		}
-		break
-	}
-	return nil
 }

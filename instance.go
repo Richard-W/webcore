@@ -3,7 +3,6 @@ package webcore
 
 import (
 	http		"net/http"
-	sql		"database/sql"
 	template	"text/template"
 	regexp		"regexp"
 	strings		"strings"
@@ -36,16 +35,12 @@ func NewInstance () *Instance {
 }
 
 // Set the database of the instance
-func (in *Instance) SetDatabase (database *sql.DB) {
-	db, err := newDatabase (database)
-	if err != nil {
-		panic (err.Error ())
-	}
-	in.database = db
+func (in *Instance) SetDatabase (database *Database) {
+	in.database = database
 }
 
 // Set the database of the default instance
-func SetDatabase (database *sql.DB) {
+func SetDatabase (database *Database) {
 	DefaultInstance.SetDatabase (database)
 }
 

@@ -65,11 +65,15 @@ import (
 func main () {
         webcore.SetAddress ("localhost:8080")
         webcore.SetBaseTemplate ("./template.html")
-        db, err := sql.Open ("sqlite3", "./sqlite.db")
+        realDB, err := sql.Open ("sqlite3", "./sqlite.db")
         if err != nil {
                 panic (err.Error ())
         }
-        webcore.SetDatabase (db)
+	database, err := webcore.NewDatabase (realDB)
+        if err != nil {
+                panic (err.Error ())
+        }
+        webcore.SetDatabase (database)
         err = webcore.Run ()
         if err != nil {
                 print (err.Error () + "\n")
