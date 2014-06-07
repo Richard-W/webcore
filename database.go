@@ -57,8 +57,11 @@ func (db *Database) upgradePlugin (plugin DatabasePlugin, oldVersion int) error 
 	} else {
 		query = "UPDATE `plugin_versions` SET `version` = ? WHERE `name` = ?"
 	}
-	_, err = db.Exec (query, plugin.Version, plugin.Name)
-	return err
+	_, err = db.Query (query, plugin.Version, plugin.Name)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // See sql.DB.Query

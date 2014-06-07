@@ -4,7 +4,7 @@ import (
 	markdown        "github.com/russross/blackfriday"
 )
 
-var markdownDBPlugin = DatabasePlugin {
+var MarkdownDBPlugin = DatabasePlugin {
 	Name:		"webcore_markdown",
 	Version:	1,
 	Upgrade:	upgradeMarkdownDatabase,
@@ -17,10 +17,6 @@ func init () {
 
 func fragmentMarkdownGetHtml (iface FragmentInterface) string {
 	db := iface.Instance.GetDatabase ()
-	err := db.RegisterPlugin (markdownDBPlugin)
-	if err != nil && err != ErrDBPluginNameTaken {
-		panic (err.Error ())
-	}
 	res, err := db.Query ("SELECT `content` FROM `fragment_markdown` WHERE `uuid` = ?", iface.UUID)
 	if err != nil {
 		panic (err.Error ())
